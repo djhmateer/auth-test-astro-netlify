@@ -1,22 +1,53 @@
 ---
+/**
+ * LOGIN PAGE - SERVER-SIDE AUTHENTICATION HANDLER
+ *
+ * This Astro page handles both GET and POST requests:
+ * - GET: Display the login form
+ * - POST: Process login form submission and authenticate user
+ *
+ * AUTHENTICATION FLOW:
+ * 1. User submits login form (POST request)
+ * 2. Extract password from form data
+ * 3. Send password to Netlify serverless function for validation
+ * 4. If valid: receive JWT token from function
+ * 5. Store JWT token in secure httpOnly cookie
+ * 6. Redirect user to protected route
+ * 7. If invalid: display error (future enhancement)
+ *
+ * SECURITY FEATURES:
+ * - Server-side form processing (no client-side password handling)
+ * - HttpOnly cookies prevent XSS token theft
+ * - Secure cookies for HTTPS-only transmission
+ * - SameSite cookies prevent CSRF attacks
+ * - Comprehensive logging of all authentication attempts
+ */
+
 import Layout from '../layouts/Layout.astro';
 
+// Extract Astro context objects for handling request/response
 const { cookies, request, redirect } = Astro;
 const timestamp = new Date().toISOString();
+
+// Extract client information for security logging
 const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
 console.log(`[${timestamp}] LOGIN: Login page accessed from ${clientIP}`);
 
+// SERVER-SIDE FORM PROCESSING
+// Check if this is a form submission (POST request)
 if (request.method === 'POST') {
   console.log(`[${timestamp}] LOGIN: POST request received from ${clientIP}`);
 
   try {
+    // STEP 1: Extract password from submitted form data
     const data = await request.formData();
     const password = data.get('password') as string;
 
     console.log(`[${timestamp}] LOGIN: Form data parsed, sending authentication request from ${clientIP}`);
 
-    // Send to our Netlify function for authentication
+    // STEP 2: Send password to Netlify serverless function for validation
+    // This keeps password validation logic centralized and secure
     const response = await fetch(`${Astro.url.origin}/.netlify/functions/authenticate`, {
       method: 'POST',
       headers: {
@@ -28,30 +59,38 @@ if (request.method === 'POST') {
     console.log(`[${timestamp}] LOGIN: Authentication response received: ${response.status} from ${clientIP}`);
 
     if (response.ok) {
+      // STEP 3A: Authentication successful - extract JWT token
       const { token } = await response.json();
 
       console.log(`[${timestamp}] LOGIN: Authentication successful, setting cookie for ${clientIP}`);
 
-      // Set the auth token cookie
+      // STEP 4: Store JWT token in secure httpOnly cookie
+      // This cookie will be automatically sent with all future requests
       cookies.set('auth-token', token, {
-        path: '/',
-        maxAge: 60 * 60 * 24, // 24 hours
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict'
+        path: '/',              // Cookie available for entire site
+        maxAge: 60 * 60 * 24,   // 24 hours expiration
+        httpOnly: true,         // Prevent JavaScript access (XSS protection)
+        secure: true,           // HTTPS only (ignored in development)
+        sameSite: 'strict'      // CSRF protection
       });
 
       console.log(`[${timestamp}] LOGIN: Cookie set, redirecting to projects page for ${clientIP}`);
 
-      // Redirect to projects page
+      // STEP 5: Redirect to protected route
+      // User is now authenticated and can access /projects/*
       return redirect('/projects/project1');
+
     } else {
-      // Handle authentication failure
+      // STEP 3B: Authentication failed
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       console.error(`[${timestamp}] LOGIN: Authentication failed for ${clientIP}: ${response.status} - ${errorData.error}`);
+      // Note: Could add error display to user interface here
     }
+
   } catch (error) {
+    // STEP 6: Handle any errors during authentication process
     console.error(`[${timestamp}] LOGIN: Login error for ${clientIP}:`, error);
+    // Note: Could add error display to user interface here
   }
 }
 ---
@@ -87,17 +126,43 @@ if (request.method === 'POST') {
   </div>
 
   <script>
-    // Client-side authentication logging
+    /**
+     * CLIENT-SIDE AUTHENTICATION LOGGING
+     *
+     * This script provides comprehensive client-side logging for security monitoring
+     * and user behavior analysis on the login page.
+     *
+     * LOGGED EVENTS:
+     * - Page load and visibility changes
+     * - Form submission attempts
+     * - Password field interactions (focus/blur)
+     * - User behavior patterns
+     *
+     * SECURITY PURPOSE:
+     * - Track authentication attempts
+     * - Monitor for suspicious behavior
+     * - Debug authentication issues
+     * - Analyze user interaction patterns
+     *
+     * Note: This runs in the browser and logs to browser console (F12).
+     * For production, consider sending logs to a monitoring service.
+     */
+
+    // LOG: Initial page load
     console.log('[CLIENT] Login page loaded at', new Date().toISOString());
 
+    // Get references to form elements for event logging
     const form = document.querySelector('form');
     const passwordInput = document.getElementById('password');
 
+    // FORM SUBMISSION LOGGING
+    // Track when users attempt to submit the login form
     if (form) {
       form.addEventListener('submit', function(e) {
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] CLIENT: Form submission initiated`);
 
+        // Check if password field has content (without logging the actual password)
         if (passwordInput && passwordInput.value) {
           console.log(`[${timestamp}] CLIENT: Password field has value, submitting form`);
         } else {
@@ -106,7 +171,9 @@ if (request.method === 'POST') {
       });
     }
 
-    // Log page visibility changes
+    // PAGE VISIBILITY LOGGING
+    // Track when users switch away from or back to the login page
+    // Useful for security monitoring and user behavior analysis
     document.addEventListener('visibilitychange', function() {
       const timestamp = new Date().toISOString();
       if (document.hidden) {
@@ -116,13 +183,16 @@ if (request.method === 'POST') {
       }
     });
 
-    // Log when user focuses on password field
+    // PASSWORD FIELD INTERACTION LOGGING
+    // Track user interaction with the password field for behavior analysis
     if (passwordInput) {
+      // Log when user starts entering password
       passwordInput.addEventListener('focus', function() {
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] CLIENT: Password field focused`);
       });
 
+      // Log when user finishes with password field
       passwordInput.addEventListener('blur', function() {
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] CLIENT: Password field blurred`);
