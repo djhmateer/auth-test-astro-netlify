@@ -4,6 +4,21 @@ import { verifyToken } from './utils/auth';
 /**
  * AUTHENTICATION MIDDLEWARE
  *
+ * EXECUTION ENVIRONMENT:
+ * - Runs as part of Astro's built-in middleware system
+ * - NOT a separate Netlify function - this is Astro's native middleware
+ * - Executes within the main Astro SSR application (server-side)
+ * - Powered by Astro's middleware API, processed by the Netlify adapter
+ * - Runs on Netlify's Node.js runtime (same as Astro SSR pages)
+ * - Integrated into the Astro request/response cycle
+ *
+ * ASTRO MIDDLEWARE FEATURES:
+ * - Built into Astro framework (not external function)
+ * - Runs before page rendering
+ * - Has access to Astro context (cookies, request, redirect)
+ * - Part of the main application bundle, not separate deployment
+ * - Processed by @astrojs/netlify adapter during build
+ *
  * This middleware runs on EVERY request to the Astro application.
  * It serves as the first line of defense for protecting routes.
  *

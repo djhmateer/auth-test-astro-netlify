@@ -18,7 +18,7 @@ This is an Astro project with Netlify adapter configured for password-protected 
 
 The `/projects/*` routes are protected by a multi-layer authentication system:
 
-1. **Astro Middleware** (`src/middleware.ts`) - Intercepts requests to `/projects/*` and validates JWT tokens stored in httpOnly cookies
+1. **Astro Middleware** (`src/middleware.ts`) - Native Astro middleware that runs within the SSR application context, not as a separate function. Intercepts requests to `/projects/*` and validates JWT tokens stored in httpOnly cookies
 2. **Login Page** (`src/pages/login.astro`) - Server-rendered form that posts credentials to Netlify function
 3. **Netlify Serverless Function** (`netlify/functions/authenticate.ts`) - Validates password and returns JWT token
 4. **Auth Utilities** (`src/utils/auth.ts`) - JWT token generation, verification, and password validation
@@ -41,6 +41,7 @@ Edge Functions would be faster but have runtime limitations that make JWT handli
 - **Protected Routes**: Any path starting with `/projects/` requires authentication
 - **Session Management**: JWT tokens with 24-hour expiration stored in secure httpOnly cookies
 - **Environment Variables**: `JWT_SECRET` and `PROTECTED_PASSWORD` (defaults in code, no .env file used)
+- **Middleware Execution**: Astro's native middleware runs within the main SSR application, processed by Netlify adapter
 
 ### Default Credentials
 
@@ -67,3 +68,10 @@ All authentication components include detailed logging:
 - `.netlify/` directory contains build artifacts and should remain in .gitignore
 - Netlify functions are auto-deployed from `netlify/functions/` directory
 - No Edge Functions directory present - uses traditional serverless functions only
+- Middleware runs as part of the main Astro SSR bundle, not as separate functions
+
+### Architecture Components
+
+- **Astro Middleware**: Built into main app, runs before page rendering within SSR context
+- **Netlify Functions**: Separate serverless functions in `netlify/functions/` directory
+- **Edge Functions**: Not used (would be in `netlify/edge-functions/` if implemented)

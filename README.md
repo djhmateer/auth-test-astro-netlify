@@ -16,7 +16,7 @@ Login Page → Netlify Serverless Function → JWT Token
 
 ### Detailed Flow
 
-1. **Route Protection**: Astro middleware (`src/middleware.ts`) intercepts all requests to `/projects/*`
+1. **Route Protection**: Astro middleware (`src/middleware.ts`) - native Astro middleware running within the SSR application context - intercepts all requests to `/projects/*`
 2. **Token Validation**: Middleware checks for valid JWT token in httpOnly cookies
 3. **Redirect to Login**: Unauthenticated users are redirected to `/login`
 4. **Password Authentication**: Login form posts to Netlify serverless function (`/.netlify/functions/authenticate`)
@@ -106,7 +106,7 @@ The code uses hardcoded fallbacks (not recommended for production):
 
 ### Authentication Components
 
-- **`src/middleware.ts`** - Route protection middleware with comprehensive logging
+- **`src/middleware.ts`** - Native Astro middleware running within SSR context (not a separate function) with comprehensive logging
 - **`src/pages/login.astro`** - Login form and server-side processing with client-side event logging
 - **`src/pages/logout.astro`** - Session termination
 - **`src/utils/auth.ts`** - JWT utilities and password validation with detailed logging
@@ -122,7 +122,7 @@ The code uses hardcoded fallbacks (not recommended for production):
 The application includes **comprehensive logging** throughout the authentication flow:
 
 ### Server Logs
-- **Middleware**: Route protection attempts, token validation, IP tracking
+- **Middleware**: Route protection attempts, token validation, IP tracking (runs within Astro SSR context)
 - **Serverless Function**: Authentication requests, password validation, token generation
 - **Auth Utils**: JWT operations, token expiration handling, detailed error categorization
 
@@ -217,8 +217,19 @@ To use Edge Functions instead of Serverless Functions:
 - **Netlify Adapter**: @astrojs/netlify 6.5.11
 - **Authentication**: JWT with jsonwebtoken library
 - **Function Type**: Serverless Functions (Node.js runtime)
+- **Middleware Type**: Native Astro middleware (runs within SSR bundle)
 - **Session Duration**: 24 hours
 - **Logging**: Comprehensive client and server-side logging
+
+## 🏗️ Architecture Components
+
+### Execution Environments
+
+- **Astro Middleware** (`src/middleware.ts`): Native Astro middleware that runs within the main SSR application context, processed by the Netlify adapter. NOT a separate function.
+- **Netlify Serverless Functions** (`netlify/functions/`): Separate serverless functions deployed to Netlify's Node.js runtime
+- **Edge Functions**: Not used in this project (would be in `netlify/edge-functions/` if implemented)
+
+The middleware is part of Astro's built-in middleware system and runs before page rendering within the same runtime as your SSR pages.
 
 ## 📝 License
 
