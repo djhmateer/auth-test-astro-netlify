@@ -2,11 +2,19 @@
 import Layout from '../layouts/Layout.astro';
 
 const { cookies, request, redirect } = Astro;
+const timestamp = new Date().toISOString();
+const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
+console.log(`[${timestamp}] LOGIN: Login page accessed from ${clientIP}`);
 
 if (request.method === 'POST') {
+  console.log(`[${timestamp}] LOGIN: POST request received from ${clientIP}`);
+
   try {
     const data = await request.formData();
     const password = data.get('password') as string;
+
+    console.log(`[${timestamp}] LOGIN: Form data parsed, sending authentication request from ${clientIP}`);
 
     // Send to our Netlify function for authentication
     const response = await fetch(`${Astro.url.origin}/.netlify/functions/authenticate`, {
@@ -17,8 +25,12 @@ if (request.method === 'POST') {
       body: JSON.stringify({ password }),
     });
 
+    console.log(`[${timestamp}] LOGIN: Authentication response received: ${response.status} from ${clientIP}`);
+
     if (response.ok) {
       const { token } = await response.json();
+
+      console.log(`[${timestamp}] LOGIN: Authentication successful, setting cookie for ${clientIP}`);
 
       // Set the auth token cookie
       cookies.set('auth-token', token, {
@@ -29,14 +41,17 @@ if (request.method === 'POST') {
         sameSite: 'strict'
       });
 
+      console.log(`[${timestamp}] LOGIN: Cookie set, redirecting to projects page for ${clientIP}`);
+
       // Redirect to projects page
       return redirect('/projects/project1');
     } else {
       // Handle authentication failure
-      console.error('Authentication failed');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error(`[${timestamp}] LOGIN: Authentication failed for ${clientIP}: ${response.status} - ${errorData.error}`);
     }
   } catch (error) {
-    console.error('Login error:', error);
+    console.error(`[${timestamp}] LOGIN: Login error for ${clientIP}:`, error);
   }
 }
 ---
@@ -70,4 +85,48 @@ if (request.method === 'POST') {
       <a href="/" style="text-decoration: none; color: #666;">← Back to Home</a>
     </div>
   </div>
+
+  <script>
+    // Client-side authentication logging
+    console.log('[CLIENT] Login page loaded at', new Date().toISOString());
+
+    const form = document.querySelector('form');
+    const passwordInput = document.getElementById('password');
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] CLIENT: Form submission initiated`);
+
+        if (passwordInput && passwordInput.value) {
+          console.log(`[${timestamp}] CLIENT: Password field has value, submitting form`);
+        } else {
+          console.log(`[${timestamp}] CLIENT: Password field is empty`);
+        }
+      });
+    }
+
+    // Log page visibility changes
+    document.addEventListener('visibilitychange', function() {
+      const timestamp = new Date().toISOString();
+      if (document.hidden) {
+        console.log(`[${timestamp}] CLIENT: Login page hidden`);
+      } else {
+        console.log(`[${timestamp}] CLIENT: Login page visible`);
+      }
+    });
+
+    // Log when user focuses on password field
+    if (passwordInput) {
+      passwordInput.addEventListener('focus', function() {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] CLIENT: Password field focused`);
+      });
+
+      passwordInput.addEventListener('blur', function() {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] CLIENT: Password field blurred`);
+      });
+    }
+  </script>
 </Layout>
