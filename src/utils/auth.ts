@@ -37,9 +37,12 @@ export function generateToken(payload: any): string {
   console.log(`[${timestamp}] AUTH_UTILS: Generating JWT token`);
 
   try {
-    // Create JWT token with 24-hour expiration
+    // Create JWT token with 24-hour expiration and explicit HS256 algorithm
     // The token is signed with our secret key to prevent tampering
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: '24h',
+      algorithm: 'HS256'
+    });
     console.log(`[${timestamp}] AUTH_UTILS: JWT token generated successfully`);
     return token;
   } catch (error) {
@@ -67,9 +70,9 @@ export async function verifyToken(token: string): Promise<boolean> {
   console.log(`[${timestamp}] AUTH_UTILS: Verifying JWT token`);
 
   try {
-    // Verify token signature and expiration
+    // Verify token signature and expiration with explicit HS256 algorithm
     // If successful, token is valid and user is authenticated
-    jwt.verify(token, JWT_SECRET);
+    jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     console.log(`[${timestamp}] AUTH_UTILS: JWT token verified successfully`);
     return true;
   } catch (error) {

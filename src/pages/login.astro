@@ -100,6 +100,12 @@ if (request.method === 'POST') {
     <h1>Login Required</h1>
     <p>Please enter the password to access the projects section:</p>
 
+    <div style="background: #f0f8ff; border: 1px solid #4a90e2; border-radius: 4px; padding: 10px; margin-bottom: 20px;">
+      <p style="margin: 0; color: #2c5aa0; font-size: 14px;">
+        💡 <strong>Demo Hint:</strong> The password is <code style="background: #e8f4fd; padding: 2px 4px; border-radius: 2px;">1</code>
+      </p>
+    </div>
+
     <form method="post">
       <div style="margin-bottom: 20px;">
         <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
@@ -183,20 +189,6 @@ if (request.method === 'POST') {
       }
     });
 
-    // PASSWORD FIELD INTERACTION LOGGING
-    // Track user interaction with the password field for behavior analysis
-    if (passwordInput) {
-      // Log when user starts entering password
-      passwordInput.addEventListener('focus', function() {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] CLIENT: Password field focused`);
-      });
-
-      // Log when user finishes with password field
-      passwordInput.addEventListener('blur', function() {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] CLIENT: Password field blurred`);
-      });
-    }
+    // Note: Password field focus/blur logging removed for privacy
   </script>
 </Layout>
