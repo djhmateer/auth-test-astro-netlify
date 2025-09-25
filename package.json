@@ -9,6 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.13.11"
+    "@astrojs/netlify": "^6.5.11",
+    "astro": "^5.13.11",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^4.2.6",
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }

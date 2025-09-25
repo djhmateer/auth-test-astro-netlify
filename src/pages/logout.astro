@@ -1,0 +1,9 @@
+---
+const { cookies, redirect } = Astro;
+
+// Clear the auth token
+cookies.delete('auth-token', { path: '/' });
+
+// Redirect to home page
+return redirect('/');
+---

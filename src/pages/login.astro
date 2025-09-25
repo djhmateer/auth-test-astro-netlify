@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const { cookies, request, redirect } = Astro;
+
+if (request.method === 'POST') {
+  try {
+    const data = await request.formData();
+    const password = data.get('password') as string;
+
+    // Send to our Netlify function for authentication
+    const response = await fetch(`${Astro.url.origin}/.netlify/functions/authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    if (response.ok) {
+      const { token } = await response.json();
+
+      // Set the auth token cookie
+      cookies.set('auth-token', token, {
+        path: '/',
+        maxAge: 60 * 60 * 24, // 24 hours
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      });
+
+      // Redirect to projects page
+      return redirect('/projects/project1');
+    } else {
+      // Handle authentication failure
+      console.error('Authentication failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+  }
+}
+---
+
+<Layout>
+  <div style="max-width: 400px; margin: 50px auto; padding: 20px;">
+    <h1>Login Required</h1>
+    <p>Please enter the password to access the projects section:</p>
+
+    <form method="post">
+      <div style="margin-bottom: 20px;">
+        <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"
+        />
+      </div>
+
+      <button
+        type="submit"
+        style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%;"
+      >
+        Login
+      </button>
+    </form>
+
+    <div style="margin-top: 20px;">
+      <a href="/" style="text-decoration: none; color: #666;">← Back to Home</a>
+    </div>
+  </div>
+</Layout>

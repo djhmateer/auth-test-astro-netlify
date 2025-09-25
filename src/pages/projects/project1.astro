@@ -1,1 +1,14 @@
-Hello this is a secret project1 page
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout>
+  <h1>🔒 Protected Project 1</h1>
+  <p>Hello! This is a secret project1 page.</p>
+  <p>You successfully authenticated to view this content.</p>
+
+  <div style="margin-top: 20px;">
+    <a href="/logout" style="color: #666; text-decoration: none;">🚪 Logout</a> |
+    <a href="/" style="color: #666; text-decoration: none;">🏠 Home</a>
+  </div>
+</Layout>
